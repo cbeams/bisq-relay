@@ -111,6 +111,7 @@ public class RelayService {
         payloadBuilder.setContentAvailable(true);
         payloadBuilder.addCustomProperty("encrypted", encryptedMessage);
         final String payload = payloadBuilder.buildWithDefaultMaximumLength();
+        log.info("payload " + payload);
         SimpleApnsPushNotification simpleApnsPushNotification = new SimpleApnsPushNotification(apsTokenHex, IOS_BUNDLE_IDENTIFIER, payload);
 
         ApnsClient apnsClient = isProduction ? productionApnsClient : devApnsClient;
