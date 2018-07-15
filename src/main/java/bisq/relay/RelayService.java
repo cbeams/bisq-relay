@@ -62,12 +62,12 @@ public class RelayService {
         }
     }
 
-    // isProduction is only relevant for iOS
-    String sendMessage(boolean isProduction, boolean isAndroid, String token, String encryptedMessage, boolean useSound) {
+    // isProduction and isContentAvailable is only relevant for iOS
+    String sendMessage(boolean isProduction, boolean isAndroid, boolean isContentAvailable, String token, String encryptedMessage, boolean useSound) {
         if (isAndroid) {
             return sendAndroidMessage(token, encryptedMessage, useSound);
         } else {
-            return sendAppleMessage(isProduction, token, encryptedMessage, useSound);
+            return sendAppleMessage(isProduction, isContentAvailable, token, encryptedMessage, useSound);
         }
     }
 
@@ -103,12 +103,12 @@ public class RelayService {
         }
     }
 
-    private String sendAppleMessage(boolean isProduction, String apsTokenHex, String encryptedMessage, boolean useSound) {
+    private String sendAppleMessage(boolean isProduction, boolean isContentAvailable, String apsTokenHex, String encryptedMessage, boolean useSound) {
         ApnsPayloadBuilder payloadBuilder = new ApnsPayloadBuilder();
         if (useSound)
             payloadBuilder.setSoundFileName("default");
         payloadBuilder.setAlertBody("Bisq notification");
-        payloadBuilder.setContentAvailable(true);
+        payloadBuilder.setContentAvailable(isContentAvailable);
         payloadBuilder.addCustomProperty("encrypted", encryptedMessage);
         final String payload = payloadBuilder.buildWithDefaultMaximumLength();
         log.info("payload " + payload);
