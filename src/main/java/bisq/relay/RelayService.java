@@ -49,12 +49,11 @@ public class RelayService {
     private static final String ANDROID_CERTIFICATE_FILE = "serviceAccountKey.json";
     private static final String ANDROID_DATABASE_URL = "https://bisqremotetest.firebaseio.com";
 
-    private ApnsClient apnsClient;
+    private ApnsClient productionApnsClient;
+    private ApnsClient devApnsClient;
 
-    private boolean isProductionMode;
 
-    public RelayService(boolean isProductionMode) {
-        this.isProductionMode = isProductionMode;
+    public RelayService() {
         try {
             setup();
         } catch (IOException e) {
@@ -63,11 +62,12 @@ public class RelayService {
         }
     }
 
-    String sendMessage(boolean isAndroid, String token, String encryptedMessage, boolean useSound) {
+    // isProduction is only relevant for iOS
+    String sendMessage(boolean isProduction, boolean isAndroid, String token, String encryptedMessage, boolean useSound) {
         if (isAndroid) {
             return sendAndroidMessage(token, encryptedMessage, useSound);
         } else {
-            return sendAppleMessage(token, encryptedMessage, useSound);
+            return sendAppleMessage(isProduction, token, encryptedMessage, useSound);
         }
     }
 
@@ -92,23 +92,28 @@ public class RelayService {
         } else {
             File p12File = new File(iosCert.getFile());
             log.info("Using iOS certification file {}.", p12File.getAbsolutePath());
-            String apnsServer = isProductionMode ? ApnsClientBuilder.PRODUCTION_APNS_HOST : ApnsClientBuilder.DEVELOPMENT_APNS_HOST;
-            apnsClient = new ApnsClientBuilder()
-                .setApnsServer(apnsServer)
+            productionApnsClient = new ApnsClientBuilder()
+                .setApnsServer(ApnsClientBuilder.PRODUCTION_APNS_HOST)
+                .setClientCredentials(p12File, "")
+                .build();
+            devApnsClient = new ApnsClientBuilder()
+                .setApnsServer(ApnsClientBuilder.DEVELOPMENT_APNS_HOST)
                 .setClientCredentials(p12File, "")
                 .build();
         }
     }
 
-    private String sendAppleMessage(String apsTokenHex, String encryptedMessage, boolean useSound) {
+    private String sendAppleMessage(boolean isProduction, String apsTokenHex, String encryptedMessage, boolean useSound) {
         ApnsPayloadBuilder payloadBuilder = new ApnsPayloadBuilder();
         if (useSound)
             payloadBuilder.setSoundFileName("default");
-        payloadBuilder.setAlertBody("Bisq notifcation");
+        payloadBuilder.setAlertBody("Bisq notification");
+        payloadBuilder.setContentAvailable(true);
         payloadBuilder.addCustomProperty("encrypted", encryptedMessage);
         final String payload = payloadBuilder.buildWithDefaultMaximumLength();
         SimpleApnsPushNotification simpleApnsPushNotification = new SimpleApnsPushNotification(apsTokenHex, IOS_BUNDLE_IDENTIFIER, payload);
 
+        ApnsClient apnsClient = isProduction ? productionApnsClient : devApnsClient;
         PushNotificationFuture<SimpleApnsPushNotification, PushNotificationResponse<SimpleApnsPushNotification>>
             notificationFuture = apnsClient.sendNotification(simpleApnsPushNotification);
         try {

@@ -69,7 +69,7 @@ public class RelayMain {
 
         port(8888);
 
-        relayService = new RelayService(true);
+        relayService = new RelayService();
 
         handleRelay();
 
@@ -82,12 +82,13 @@ public class RelayMain {
             // http://localhost:8080/hello?isAndroid=false&snd=true&token=testToken&msg=testMsg
             boolean isAndroid = request.queryParams("isAndroid").equalsIgnoreCase("true");
             boolean useSound = request.queryParams("snd").equalsIgnoreCase("true");
+            boolean isProduction = request.queryParams("isProduction").equalsIgnoreCase("true");
             String apsTokenHex = new String(Hex.decodeHex(request.queryParams("token").toCharArray()), "UTF-8");
             String encryptedMessage = new String(Hex.decodeHex(request.queryParams("msg").toCharArray()), "UTF-8");
 
             log.info("isAndroid={}\nuseSound={}\napsTokenHex={}\nencryptedMessage={}",
                 isAndroid, useSound, apsTokenHex, encryptedMessage);
-            return relayService.sendMessage(isAndroid, apsTokenHex, encryptedMessage, useSound);
+            return relayService.sendMessage(isProduction, isAndroid, apsTokenHex, encryptedMessage, useSound);
         });
     }
 
