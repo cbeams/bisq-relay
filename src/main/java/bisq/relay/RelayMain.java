@@ -23,9 +23,6 @@ import bisq.common.util.Utilities;
 
 import org.apache.commons.codec.binary.Hex;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -51,7 +48,7 @@ public class RelayMain {
         Utilities.removeCryptographyRestrictions();
     }
 
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+    public static void main(String[] args) throws IOException {
         final String logPath = System.getProperty("user.home") + File.separator + "provider";
         Log.setup(logPath);
         Log.setLevel(Level.INFO);
@@ -76,7 +73,7 @@ public class RelayMain {
         keepRunning();
     }
 
-    private static void handleRelay() throws IOException {
+    private static void handleRelay() {
         get("/relay", (request, response) -> {
             log.info("Incoming relay request from: " + request.userAgent());
             // http://localhost:8080/hello?isAndroid=false&snd=true&token=testToken&msg=testMsg
