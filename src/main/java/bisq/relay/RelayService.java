@@ -17,15 +17,10 @@
 
 package bisq.relay;
 
-import java.net.URL;
-
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.concurrent.ExecutionException;
-
-import lombok.extern.slf4j.Slf4j;
 
 
 
@@ -41,6 +36,7 @@ import com.turo.pushy.apns.PushNotificationResponse;
 import com.turo.pushy.apns.util.ApnsPayloadBuilder;
 import com.turo.pushy.apns.util.SimpleApnsPushNotification;
 import com.turo.pushy.apns.util.concurrent.PushNotificationFuture;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RelayService {
@@ -86,19 +82,17 @@ public class RelayService {
             FirebaseApp.initializeApp(options);
         }
 
-        URL iosCert = classLoader.getResource(IOS_CERTIFICATE_FILE);
+        InputStream iosCert = classLoader.getResourceAsStream(IOS_CERTIFICATE_FILE);
         if (iosCert == null) {
             throw new IOException(IOS_CERTIFICATE_FILE + " does not exist");
         } else {
-            File p12File = new File(iosCert.getFile());
-            log.info("Using iOS certification file {}.", p12File.getAbsolutePath());
             productionApnsClient = new ApnsClientBuilder()
                 .setApnsServer(ApnsClientBuilder.PRODUCTION_APNS_HOST)
-                .setClientCredentials(p12File, "")
+                .setClientCredentials(iosCert, "")
                 .build();
             devApnsClient = new ApnsClientBuilder()
                 .setApnsServer(ApnsClientBuilder.DEVELOPMENT_APNS_HOST)
-                .setClientCredentials(p12File, "")
+                .setClientCredentials(iosCert, "")
                 .build();
         }
     }
